@@ -40,7 +40,7 @@ export default function CTA() {
               href="/join"
               className="rounded-xl border border-white/30 bg-white/10 px-7 py-3.5 font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-white/20"
             >
-              Join a Meetin
+              Join a Meeting
             </Link>
           </div>
 
