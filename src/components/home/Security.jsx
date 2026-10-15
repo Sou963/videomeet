@@ -92,7 +92,7 @@ export default function Security() {
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
                 Your future VideoMeet architecture can combine Next.js, Express,
-                Socket.IO, LiveKit, and MongoDB to build a scalable meeting
+                Socket.IO, native WebRTC, and MongoDB to build a scalable meeting
                 platform.
               </p>
             </div>
