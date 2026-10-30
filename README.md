@@ -1,6 +1,6 @@
 # VideoMeet
 
-VideoMeet is a JavaScript-only full-stack video conferencing app built with Next.js App Router, Express, MongoDB, JWT cookies, and native browser WebRTC with Socket.IO signaling !
+VideoMeet is a JavaScript-only full-stack video conferencing app built with Next.js App Router, Express, MongoDB, JWT cookies, and native browser WebRTC with Socket.IO signaling.
 
 ## What works
 
