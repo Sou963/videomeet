@@ -167,7 +167,7 @@ export default function MeetingMoreMenu({
 
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase">Voice Translation</p>
-                <p className="text-slate-300 mt-0.5">Meta SeamlessM4T v2 (Speech-to-Speech Bengali ↔ English)</p>
+                <p className="text-slate-300 mt-0.5">Gemini Live Bengali ↔ English voice translation</p>
               </div>
             </div>
 

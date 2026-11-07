@@ -20,9 +20,7 @@ export default function MeetingRoom({ meetingId, name, title, isHost, onLeave })
 
   // ── Translation State ────────────────────────────────────────────
   const [translationEnabled, setTranslationEnabled] = useState(false);
-  const [listenLanguage, setListenLanguage] = useState("eng");
-  const [audioMode, setAudioMode] = useState("translated");
-  const [audioVolume, setAudioVolume] = useState(1);
+  const [listenLanguage, setListenLanguage] = useState("en");
 
   // ── Reactions Map (peerId -> emoji) ──────────────────────────────
   const [reactionsMap, setReactionsMap] = useState({});
@@ -57,7 +55,6 @@ export default function MeetingRoom({ meetingId, name, title, isHost, onLeave })
     participants: remoteParticipants,
     enabled: translationEnabled,
     language: listenLanguage,
-    mode: audioMode,
   });
 
   // ── Elapsed Duration Timer ───────────────────────────────────────
@@ -191,7 +188,7 @@ export default function MeetingRoom({ meetingId, name, title, isHost, onLeave })
     const statuses = Object.values(translation.statuses);
     if (statuses.includes("error")) return "error";
     if (statuses.includes("translating")) return "translating";
-    if (statuses.includes("listening")) return "listening";
+    if (statuses.includes("connected")) return "connected";
     if (translationEnabled) return "connecting";
     return "idle";
   }, [translation.statuses, translationEnabled]);
@@ -235,8 +232,6 @@ export default function MeetingRoom({ meetingId, name, title, isHost, onLeave })
           raisedHands={raisedHands}
           reactionsMap={reactionsMap}
           translationEnabled={translationEnabled}
-          audioMode={audioMode}
-          translationAudioItems={translation.audioItems}
           meetingId={meetingId}
           onCopyMeetingId={handleCopyId}
           onStopScreenShare={stopScreenShare}
@@ -260,12 +255,8 @@ export default function MeetingRoom({ meetingId, name, title, isHost, onLeave })
           onToggleTranslation={setTranslationEnabled}
           listenLanguage={listenLanguage}
           onChangeLanguage={setListenLanguage}
-          audioMode={audioMode}
-          onChangeAudioMode={setAudioMode}
           translationStatus={translationStatus}
           translationError={translation.error}
-          audioVolume={audioVolume}
-          onChangeVolume={setAudioVolume}
         />
       </div>
 

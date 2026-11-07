@@ -17,7 +17,7 @@ import meetingRoutes from "./routes/meetingRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import webrtcRoutes from "./routes/webrtcRoutes.js";
-import translationRoutes from "./routes/translationRoutes.js";
+import geminiRoutes from "./routes/geminiRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import { configureMeetingSocket } from "./socket/meetingSocket.js";
 
@@ -36,7 +36,7 @@ app.use("/api/meetings", meetingRoutes);
 app.use("/api/meetings", messageRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/webrtc", webrtcRoutes);
-app.use("/api/translation", translationRoutes);
+app.use("/api/gemini", geminiRoutes);
 app.use(notFound);
 app.use(errorHandler);
 configureMeetingSocket(io);

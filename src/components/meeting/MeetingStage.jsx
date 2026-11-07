@@ -19,8 +19,6 @@ export default function MeetingStage({
   raisedHands,
   reactionsMap,
   translationEnabled,
-  audioMode,
-  translationAudioItems,
   meetingId,
   onCopyMeetingId,
   onStopScreenShare,
@@ -75,8 +73,6 @@ export default function MeetingStage({
           raisedHands={raisedHands}
           reactionsMap={reactionsMap}
           translationEnabled={translationEnabled}
-          audioMode={audioMode}
-          translationAudioItems={translationAudioItems}
           onCopyMeetingId={onCopyMeetingId}
           meetingId={meetingId}
         />
@@ -107,6 +103,7 @@ export default function MeetingStage({
                     }}
                     autoPlay
                     playsInline
+                    muted={translationEnabled}
                     className="h-full w-full object-contain bg-black"
                   />
                 )}
@@ -133,8 +130,7 @@ export default function MeetingStage({
               <ParticipantCard
                 participant={activeFocus}
                 handRaised={raisedHands[activeFocus.peerId]}
-                translated={translationEnabled && audioMode === "translated"}
-                translatedAudio={translationAudioItems[activeFocus.peerId]}
+                translated={translationEnabled}
                 activeReaction={reactionsMap[activeFocus.peerId]}
                 isScreenSharing={false}
               />
@@ -177,8 +173,7 @@ export default function MeetingStage({
                   <ParticipantCard
                     participant={p}
                     handRaised={raisedHands[p.peerId]}
-                    translated={translationEnabled && audioMode === "translated"}
-                    translatedAudio={translationAudioItems[p.peerId]}
+                    translated={translationEnabled}
                     activeReaction={reactionsMap[p.peerId]}
                     isScreenSharing={p.screenSharing}
                     compact={true}

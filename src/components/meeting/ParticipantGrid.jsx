@@ -15,8 +15,6 @@ export default function ParticipantGrid({
   raisedHands,
   reactionsMap,
   translationEnabled,
-  audioMode,
-  translationAudioItems,
   onCopyMeetingId,
   meetingId,
 }) {
@@ -58,8 +56,7 @@ export default function ParticipantGrid({
           <ParticipantCard
             participant={p}
             handRaised={raisedHands[p.peerId]}
-            translated={translationEnabled && audioMode === "translated"}
-            translatedAudio={translationAudioItems[p.peerId]}
+            translated={translationEnabled}
             activeReaction={reactionsMap[p.peerId]}
             isScreenSharing={p.screenSharing}
           />

@@ -1,148 +1,125 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "@/lib/api";
-import { createTranslationSession } from "@/services/speechService";
+import { createGeminiTranslationSession } from "@/services/geminiTranslation";
 
-export default function useVoiceTranslation({
-  meetingId,
-  participants,
-  enabled,
-  language,
-  mode,
-}) {
+export default function useVoiceTranslation({ meetingId, participants, enabled, language }) {
   const sessionsRef = useRef(new Map());
   const [statuses, setStatuses] = useState({});
-  const [audioItems, setAudioItems] = useState({});
   const [error, setError] = useState("");
-  const [isServiceOnline, setIsServiceOnline] = useState(true);
-  const enabledRef = useRef(enabled && mode === "translated");
-
-  useEffect(() => {
-    enabledRef.current = enabled && mode === "translated";
-  }, [enabled, mode]);
 
   const setStatus = useCallback((id, status) => {
     setStatuses((current) => ({ ...current, [id]: status }));
   }, []);
 
-  const stop = useCallback(
-    async (id) => {
-      const session = sessionsRef.current.get(id);
-      sessionsRef.current.delete(id);
-      if (session) await session.close().catch(() => {});
-      setStatus(id, "idle");
-    },
-    [setStatus]
-  );
-
-  // Check health of Meta SeamlessM4T v2 translation service
-  useEffect(() => {
-    if (!enabled) return;
-    let isCancelled = false;
-
-    async function checkService() {
-      try {
-        const res = await api("/translation/status", { method: "GET" }).catch(() => null);
-        if (!isCancelled && res) {
-          setIsServiceOnline(res.online ?? true);
-        }
-      } catch {
-        if (!isCancelled) setIsServiceOnline(false);
-      }
+  const stopRecord = useCallback((id, record) => {
+    record.cancelled = true;
+    record.abortController.abort();
+    if (record.session) {
+      Promise.resolve(record.session.close()).catch((error) => {
+        console.error("Failed to close Gemini translation session:", error.message);
+      });
     }
-
-    checkService();
-    return () => {
-      isCancelled = true;
-    };
-  }, [enabled]);
+    sessionsRef.current.delete(id);
+    setStatuses((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
-    if (!enabled || mode !== "translated") {
-      for (const id of sessionsRef.current.keys()) stop(id);
+    if (!enabled) {
+      for (const [id, record] of sessionsRef.current) {
+        stopRecord(id, record);
+      }
+      setError("");
       return;
     }
 
-    let cancelled = false;
+    const desired = new Map(
+      participants
+        .filter((participant) =>
+          participant.stream
+            ?.getAudioTracks()
+            .some((track) => track.readyState === "live")
+        )
+        .map((participant) => [participant.peerId, participant])
+    );
 
-    async function sync() {
-      // Find all remote participants who have live audio tracks
-      const desired = new Map(
-        participants
-          .filter((p) => p.stream?.getAudioTracks().some((track) => track.readyState === "live"))
-          .map((p) => [p.peerId, p])
-      );
-
-      // Stop sessions for participants who left or if language changed
-      for (const [id, session] of sessionsRef.current) {
-        if (!desired.has(id) || session.language !== language) {
-          await stop(id);
-        }
-      }
-
-      // Start translation sessions for new participants
-      for (const [id, participant] of desired) {
-        if (sessionsRef.current.has(id)) continue;
-        setStatus(id, "connecting");
-
-        try {
-          if (cancelled || !enabledRef.current) continue;
-
-          const stream = new MediaStream(participant.stream.getAudioTracks());
-          const session = await createTranslationSession({
-            stream,
-            language,
-            meetingId,
-            onAudio: (blob) => {
-              setAudioItems((items) => ({
-                ...items,
-                [id]: { blob, key: (items[id]?.key || 0) + 1 },
-              }));
-            },
-            onStatus: (status) => {
-              setStatus(id, status);
-              if (status === "translating") setError("");
-            },
-            onError: (message) => {
-              setStatus(id, "error");
-              setError(message);
-            },
-          });
-
-          if (cancelled) {
-            await session.close();
-          } else {
-            sessionsRef.current.set(id, { ...session, language });
-          }
-        } catch (err) {
-          setStatus(id, "error");
-          setError(err.message || "Could not connect to SeamlessM4T AI translation service.");
-        }
+    for (const [id, record] of sessionsRef.current) {
+      const participant = desired.get(id);
+      if (!participant || record.stream !== participant.stream || record.language !== language) {
+        stopRecord(id, record);
       }
     }
 
-    sync();
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, language, meetingId, mode, participants, setStatus, stop]);
+    setStatuses((current) => {
+      const next = { ...current };
+      for (const id of Object.keys(next)) {
+        if (!desired.has(id)) delete next[id];
+      }
+      return next;
+    });
+
+    for (const [id, participant] of desired) {
+      if (sessionsRef.current.has(id)) continue;
+
+      const record = {
+        abortController: new AbortController(),
+        cancelled: false,
+        language,
+        session: null,
+        stream: participant.stream,
+      };
+      sessionsRef.current.set(id, record);
+      setStatus(id, "connecting");
+
+      const audioStream = new MediaStream(participant.stream.getAudioTracks());
+      createGeminiTranslationSession({
+        stream: audioStream,
+        language,
+        meetingId,
+        signal: record.abortController.signal,
+        onStatus: (status) => {
+          if (!record.cancelled && sessionsRef.current.get(id) === record) {
+            setStatus(id, status);
+            if (status === "translating") setError("");
+          }
+        },
+        onError: (message) => {
+          if (!record.cancelled && sessionsRef.current.get(id) === record) {
+            setStatus(id, "error");
+            setError(message);
+          }
+        },
+      })
+        .then((session) => {
+          if (record.cancelled || sessionsRef.current.get(id) !== record) {
+            return session.close();
+          }
+          record.session = session;
+        })
+        .catch((err) => {
+          if (record.cancelled || sessionsRef.current.get(id) !== record) return;
+          setStatus(id, "error");
+          setError(err.message || "Gemini Live translation could not be started.");
+        });
+    }
+  }, [enabled, language, meetingId, participants, setStatus, stopRecord]);
 
   useEffect(
     () => () => {
-      for (const session of sessionsRef.current.values()) {
-        session.close().catch(() => {});
+      for (const [id, record] of sessionsRef.current) {
+        stopRecord(id, record);
       }
-      sessionsRef.current.clear();
     },
-    []
+    [stopRecord]
   );
 
   return {
     statuses,
-    audioItems,
     error,
-    isServiceOnline,
     clearError: () => setError(""),
   };
 }

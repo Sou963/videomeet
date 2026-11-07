@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import useAudioActivity from "@/hooks/useAudioActivity";
-import TranslatedAudioPlayer from "@/components/translation/TranslatedAudioPlayer";
 import { MicOffIcon, CrownIcon } from "./icons";
 
 export default function ParticipantCard({
@@ -10,7 +9,6 @@ export default function ParticipantCard({
   isHost = false,
   handRaised = false,
   translated = false,
-  translatedAudio = null,
   activeReaction = null,
   isScreenSharing = false,
   compact = false,
@@ -130,11 +128,6 @@ export default function ParticipantCard({
           )}
         </div>
       </div>
-
-      {/* ── Translated Audio Player ───────────────────────────────── */}
-      {translated && translatedAudio?.blob && (
-        <TranslatedAudioPlayer key={translatedAudio.key} audio={translatedAudio.blob} />
-      )}
 
       {/* ── Connecting indicator if stream not ready ───────────────── */}
       {!participant.stream && (

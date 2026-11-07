@@ -22,12 +22,8 @@ export default function MeetingSidebar({
   onToggleTranslation,
   listenLanguage,
   onChangeLanguage,
-  audioMode,
-  onChangeAudioMode,
   translationStatus,
   translationError,
-  audioVolume,
-  onChangeVolume,
 }) {
   if (!isOpen) return null;
 
@@ -116,12 +112,8 @@ export default function MeetingSidebar({
             setEnabled={onToggleTranslation}
             language={listenLanguage}
             setLanguage={onChangeLanguage}
-            mode={audioMode}
-            setMode={onChangeAudioMode}
             status={translationStatus}
             error={translationError}
-            volume={audioVolume}
-            onChangeVolume={onChangeVolume}
           />
         )}
       </div>
