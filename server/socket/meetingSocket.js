@@ -192,7 +192,7 @@ export function configureMeetingSocket(io) {
     socket.on("reaction", ({ meetingId, reaction, name } = {}) => {
       const room = roomValue(meetingId);
       if (!room || socket.data.room !== room) return;
-      const allowed = ["👍", "❤️", "😂", "👏", "🎉"];
+      const allowed = ["👍", "❤️", "😂", "👏", "🎉", "🔥"];
       if (!allowed.includes(reaction)) return;
       io.to(room).emit("reaction", {
         peerId: socket.id,

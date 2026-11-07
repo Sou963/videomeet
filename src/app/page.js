@@ -20,10 +20,6 @@ export default function Home() {
       <Security />
       <CTA />
       <Footer />
-
-      {/* <main className="pt-16">
-        <h1 className="text-center text-4xl font-bold">Welcome to VideoMeet</h1>
-      </main> */}
     </>
   );
 }

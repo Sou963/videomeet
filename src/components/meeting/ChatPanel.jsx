@@ -2,27 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { SendIcon, ChatIcon } from "./icons";
 
-/**
- * ChatPanel — meeting chat that shares the socket from useWebRTC
- * instead of creating its own connection.
- *
- * @param {Object} props
- * @param {string} props.meetingId
- * @param {string} props.name — local user display name
- * @param {React.MutableRefObject} props.socketRef — shared socket ref from useWebRTC
- * @param {() => void} props.onClose
- */
-export default function ChatPanel({ meetingId, name, socketRef, onClose }) {
+export default function ChatPanel({ meetingId, name, socketRef }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
-  const [online, setOnline] = useState(false);
   const bottomRef = useRef(null);
   const listenerAttached = useRef(false);
 
   // Load existing messages + attach socket listener
   useEffect(() => {
-    // Load history
     api(`/meetings/${meetingId}/messages`)
       .then(({ messages: msgs }) => setMessages(msgs || []))
       .catch(() => {});
@@ -30,29 +19,16 @@ export default function ChatPanel({ meetingId, name, socketRef, onClose }) {
     const socket = socketRef?.current;
     if (!socket) return;
 
-    setOnline(socket.connected);
-
-    function onConnect() {
-      setOnline(true);
-    }
-    function onDisconnect() {
-      setOnline(false);
-    }
     function onChatMessage(msg) {
       setMessages((prev) => [...prev, msg]);
     }
 
-    // Guard against duplicate listeners when React strict mode double-mounts
     if (!listenerAttached.current) {
-      socket.on("connect", onConnect);
-      socket.on("disconnect", onDisconnect);
       socket.on("chat-message", onChatMessage);
       listenerAttached.current = true;
     }
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
       socket.off("chat-message", onChatMessage);
       listenerAttached.current = false;
     };
@@ -76,71 +52,78 @@ export default function ChatPanel({ meetingId, name, socketRef, onClose }) {
   }
 
   return (
-    <aside className="fixed bottom-0 right-0 z-30 flex h-96 w-80 flex-col rounded-tl-2xl border-l border-t border-slate-700 bg-slate-900 shadow-2xl sm:bottom-4 sm:right-4 sm:rounded-2xl sm:border">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-white">💬 Chat</span>
-          <span
-            className={`h-2 w-2 rounded-full ${
-              online ? "bg-emerald-400" : "bg-red-400"
-            }`}
-          />
-        </div>
-        <button
-          onClick={onClose}
-          className="text-slate-400 hover:text-white transition"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 text-sm">
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* ── Messages Feed ────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 text-xs">
         {messages.length === 0 && (
-          <p className="text-center text-slate-500 text-xs mt-4">
-            No messages yet. Start the conversation!
-          </p>
-        )}
-        {messages.map((msg, i) => (
-          <div key={msg._id || i}>
-            <p className="text-xs text-slate-400">
-              <strong className="text-slate-200">{msg.senderName}</strong>
-              {msg.createdAt && (
-                <span className="ml-2">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              )}
+          <div className="flex h-full flex-col items-center justify-center text-center text-slate-500 py-12">
+            <ChatIcon className="w-8 h-8 text-slate-600 mb-2 opacity-60" />
+            <p className="font-semibold text-slate-300">No messages yet</p>
+            <p className="text-[11px] text-slate-500 mt-1 max-w-[200px]">
+              Send a note to start collaborating with everyone in the room.
             </p>
-            <p className="mt-0.5 text-slate-300">{msg.message}</p>
           </div>
-        ))}
+        )}
+
+        {messages.map((msg, i) => {
+          const isMe = msg.senderName === name;
+          const initial = msg.senderName ? msg.senderName[0].toUpperCase() : "U";
+
+          return (
+            <div
+              key={msg._id || i}
+              className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-slate-300 text-[11px]">
+                  {isMe ? "You" : msg.senderName}
+                </span>
+                {msg.createdAt && (
+                  <span className="text-[10px] text-slate-500">
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                )}
+              </div>
+
+              <div
+                className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] text-xs leading-relaxed break-words shadow-sm ${
+                  isMe
+                    ? "bg-[#6366F1] text-white"
+                    : "bg-[#1A2437] text-slate-200 border border-slate-700/60"
+                }`}
+              >
+                {msg.message}
+              </div>
+            </div>
+          );
+        })}
         <span ref={bottomRef} />
       </div>
 
-      {/* Input */}
+      {/* ── Message Input ────────────────────────────────────────── */}
       <form
         onSubmit={send}
-        className="flex gap-2 border-t border-slate-700 px-3 py-3"
+        className="flex gap-2 border-t border-slate-800/80 p-3 bg-[#101624]/60"
       >
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="min-w-0 flex-1 rounded-lg bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="Type a message…"
+          className="min-w-0 flex-1 rounded-xl border border-slate-700/80 bg-[#151D2E] px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none transition focus:border-[#6366F1]"
+          placeholder="Send a message to everyone…"
           maxLength={1500}
         />
         <button
           type="submit"
           disabled={!text.trim()}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6366F1] text-white transition hover:bg-indigo-600 disabled:opacity-40 shrink-0"
+          title="Send"
         >
-          Send
+          <SendIcon className="w-3.5 h-3.5" />
         </button>
       </form>
-    </aside>
+    </div>
   );
 }

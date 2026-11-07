@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Link2, ArrowRight, ShieldCheck, Globe, Zap, Sparkles } from "lucide-react";
 
 export default function QuickJoin() {
   const [meetingId, setMeetingId] = useState("");
@@ -9,68 +10,75 @@ export default function QuickJoin() {
 
   const handleJoin = (e) => {
     e.preventDefault();
-
-    if (!meetingId.trim()) {
-      return;
-    }
+    if (!meetingId.trim()) return;
 
     const value = meetingId.trim().replace(/^.*\//, "");
     router.push(`/meeting/${encodeURIComponent(value)}`);
   };
 
   return (
-    <section className="bg-gray-50 py-12">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
-            {/* Left Content */}
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-                Quick Join
-              </p>
+    <section className="relative -mt-10 z-20 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/90 p-6 shadow-xl shadow-slate-200/50 backdrop-blur-xl sm:p-8">
+        {/* Subtle decorative background gradient */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-100/60 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-cyan-100/50 blur-3xl" />
 
-              <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
-                Join a meeting instantly
-              </h2>
-
-              <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500 sm:text-base">
-                Enter your meeting ID or meeting link below to join a VideoMeet
-                session.
-              </p>
+        <div className="relative grid items-center gap-6 lg:grid-cols-12">
+          {/* Left Text */}
+          <div className="lg:col-span-6">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              <Zap className="h-3.5 w-3.5 text-blue-600" />
+              <span>Instant Access</span>
             </div>
 
-            {/* Form */}
-            <form
-              onSubmit={handleJoin}
-              className="flex w-full flex-col gap-3 sm:flex-row md:w-auto"
-            >
-              <input
-                type="text"
-                value={meetingId}
-                onChange={(e) => setMeetingId(e.target.value)}
-                placeholder="Enter meeting ID"
-                className="h-12 min-w-0 flex-1 rounded-xl border border-gray-300 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:w-64"
-              />
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Have a meeting code?
+            </h2>
+
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+              Enter the meeting ID or full invite link to drop straight into the session without an account.
+            </p>
+          </div>
+
+          {/* Form */}
+          <div className="lg:col-span-6">
+            <form onSubmit={handleJoin} className="flex flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                  <Link2 className="h-4 w-4" />
+                </div>
+                <input
+                  type="text"
+                  value={meetingId}
+                  onChange={(e) => setMeetingId(e.target.value)}
+                  placeholder="e.g. meet-894-abc or link"
+                  className="h-13 w-full rounded-2xl border border-slate-300/80 bg-slate-50/70 pl-11 pr-4 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
 
               <button
                 type="submit"
-                className="h-12 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+                className="group flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 text-sm font-bold text-white shadow-md shadow-blue-500/25 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/35 active:scale-[0.98]"
               >
-                Join
+                <span>Join Meeting</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </form>
-          </div>
 
-          {/* Bottom Info */}
-          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-gray-100 pt-5 text-xs text-gray-500 sm:text-sm">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              No download required
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
-              Join from your browser
+            {/* Micro assurances */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                <span>Encrypted connection</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-4 w-4 text-blue-500" />
+                <span>Runs in all modern browsers</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                <span>No install required</span>
+              </div>
             </div>
           </div>
         </div>
